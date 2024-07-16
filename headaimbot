@@ -1,4 +1,4 @@
-getgenv().AimPart = "Head" -- For R15 Games: {UpperTorso, LowerTorso, HumanoidRootPart, Head} | For R6 Games: {Head, Torso, HumanoidRootPart}
+getgenv().AimPart = "HumanoidRootPart" -- For R15 Games: {UpperTorso, LowerTorso, HumanoidRootPart, Head} | For R6 Games: {Head, Torso, HumanoidRootPart}
 getgenv().AimRadius = 30 
 getgenv().ThirdPerson = false 
 getgenv().FirstPerson = true
@@ -18,7 +18,7 @@ local RNew = Ray.new
 local Vec3 = Vector3.new
 local Vec2 = Vector2.new
 
-local Aimlock = true
+local Aimlock = false
 local RightClickPressed = false
 local CanNotify = false
 local AimlockTarget
@@ -96,7 +96,17 @@ end
 
 Uis.InputBegan:Connect(function(input, gameProcessed)
     if not gameProcessed then
-        if input.UserInputType == Enum.UserInputType.MouseButton2 then
+        if input.KeyCode == Enum.KeyCode.P then
+            Aimlock = not Aimlock
+            if Aimlock then
+                print("Aimbot enabled")
+            else
+                print("Aimbot disabled")
+                AimlockTarget = nil
+            end
+        end
+
+        if Aimlock and input.UserInputType == Enum.UserInputType.MouseButton2 then
             RightClickPressed = true
             print("Right-click pressed")
             local Target = getgenv().GetNearestTarget()
@@ -117,43 +127,45 @@ Uis.InputEnded:Connect(function(input, gameProcessed)
 end)
 
 RService.RenderStepped:Connect(function()
-    if getgenv().ThirdPerson == true and getgenv().FirstPerson == true then 
-        if (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude > 1 or (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude <= 1 then 
-            CanNotify = true 
-        else 
-            CanNotify = false 
+    if Aimlock then
+        if getgenv().ThirdPerson == true and getgenv().FirstPerson == true then 
+            if (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude > 1 or (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude <= 1 then 
+                CanNotify = true 
+            else 
+                CanNotify = false 
+            end
+        elseif getgenv().ThirdPerson == true and getgenv().FirstPerson == false then 
+            if (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude > 1 then 
+                CanNotify = true 
+            else 
+                CanNotify = false 
+            end
+        elseif getgenv().ThirdPerson == false and getgenv().FirstPerson == true then 
+            if (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude <= 1 then 
+                CanNotify = true 
+            else 
+                CanNotify = false 
+            end
         end
-    elseif getgenv().ThirdPerson == true and getgenv().FirstPerson == false then 
-        if (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude > 1 then 
-            CanNotify = true 
-        else 
-            CanNotify = false 
-        end
-    elseif getgenv().ThirdPerson == false and getgenv().FirstPerson == true then 
-        if (Camera.Focus.p - Camera.CoordinateFrame.p).Magnitude <= 1 then 
-            CanNotify = true 
-        else 
-            CanNotify = false 
-        end
-    end
-    if Aimlock == true and RightClickPressed == true then 
-        if AimlockTarget and AimlockTarget.Character and AimlockTarget.Character:FindFirstChild(getgenv().AimPart) then 
-            if getgenv().FirstPerson == true then
-                if CanNotify == true then
-                    if getgenv().PredictMovement == true then 
-                        Camera.CFrame = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position + AimlockTarget.Character[getgenv().AimPart].Velocity / getgenv().PredictionVelocity)
-                    elseif getgenv().PredictMovement == false then 
-                        Camera.CFrame = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position)
+        if RightClickPressed == true then 
+            if AimlockTarget and AimlockTarget.Character and AimlockTarget.Character:FindFirstChild(getgenv().AimPart) then 
+                if getgenv().FirstPerson == true then
+                    if CanNotify == true then
+                        if getgenv().PredictMovement == true then 
+                            Camera.CFrame = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position + AimlockTarget.Character[getgenv().AimPart].Velocity / getgenv().PredictionVelocity)
+                        elseif getgenv().PredictMovement == false then 
+                            Camera.CFrame = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position)
+                        end
                     end
+                elseif getgenv().ThirdPerson == true then 
+                    if CanNotify == true then
+                        if getgenv().PredictMovement == true then 
+                            Camera.CFrame = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position + AimlockTarget.Character[getgenv().AimPart].Velocity / getgenv().PredictionVelocity)
+                        elseif getgenv().PredictMovement == false then 
+                            Camera.CFrame = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position)
+                        end
+                    end 
                 end
-            elseif getgenv().ThirdPerson == true then 
-                if CanNotify == true then
-                    if getgenv().PredictMovement == true then 
-                        Camera.CFrame = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position + AimlockTarget.Character[getgenv().AimPart].Velocity / getgenv().PredictionVelocity)
-                    elseif getgenv().PredictMovement == false then 
-                        Camera.CFrame = CF(Camera.CFrame.p, AimlockTarget.Character[getgenv().AimPart].Position)
-                    end
-                end 
             end
         end
     end
